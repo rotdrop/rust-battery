@@ -193,22 +193,29 @@ impl<'p> DataBuilder<'p> {
             let value = match fs::power(self.root.join("power_now"))? {
                 Some(power) => Some(power),
                 None => {
-                    match fs::get::<f32, _>(self.root.join("current_now"))? {
-                        Some(current_now) => {
-                            // If charge_full exists, then current_now is always reported in µA.
-                            // In the legacy case, where energy only units exist, and power_now isn't present
-                            // current_now is power in µW.
-                            // Source: upower
-                            if !self.charge_full().is_zero() {
-                                 // µA then
-                                Some(microampere!(current_now.abs()) * self.voltage()?)
-                            } else {
-                                 // µW :|
-                                Some(microwatt!(current_now))
-                            }
+		    let mut power =
+			["current_now", "current_avg"]
+			.iter()
+			.filter_map(|filename| match fs::get::<f32, _>(self.root.join(filename)) {
+                            Ok(Some(value)) => Some(value),
+			    _ => None,
+			});
+		    match power.next() {
+			Some(current) => {
+			    // If charge_full exists, then current_now is always reported in µA.
+			    // In the legacy case, where energy only units exist, and power_now isn't present
+			    // current_now is power in µW.
+			    // Source: upower
+			    if !self.charge_full().is_zero() {
+                                // µA then
+                                Some(microampere!(current.abs()) * self.voltage()?)
+			    } else {
+                                // µW :|
+                                Some(microwatt!(current))
+			    }
                         }
-                        None => None,
-                    }
+			None => None,
+		    }
                 }		
             };
 
@@ -290,13 +297,25 @@ impl<'p> DataBuilder<'p> {
         let mut value =
             ["current_now", "current_avg"]
                 .iter()
-                .filter_map(|filename| match fs::current(self.root.join(filename)) {
+	        .filter_map(|filename| match fs::get::<f32, _>(self.root.join(filename)) {
                     Ok(Some(value)) => Some(value),
                     _ => None,
                 });
 
         match value.next() {
-            Some(value) => Ok(value),
+            Some(value) => {
+		// If charge_full exists, then current_now is always reported in µA.
+		// In the legacy case, where energy only units exist, and power_now isn't present
+		// current_now is power in µW.
+		// Source: upower
+		if !self.charge_full().is_zero() {
+                    // µA then
+                    Ok(microampere!(value))
+		} else {
+                    // µW :|
+                    Ok(microwatt!(value) / self.voltage()?)
+		}
+	    }
             None => Err(Error::not_found("Unable to calculate device current value")),
         }
     }

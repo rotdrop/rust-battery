@@ -5,7 +5,7 @@ use std::path::Path;
 use std::str::FromStr;
 
 use super::{Scope, Type};
-use crate::units::{ElectricCharge, ElectricPotential, ElectricCurrent, Energy, Power};
+use crate::units::{ElectricCharge, ElectricPotential, Energy, Power};
 use crate::Result;
 
 // From the `errno.h`.
@@ -44,19 +44,6 @@ pub fn voltage<T: AsRef<Path>>(path: T) -> Result<Option<ElectricPotential>> {
 
     match get::<f32, _>(path) {
         Ok(Some(value_uv)) if value_uv > 1.0 => Ok(Some(microvolt!(value_uv))),
-        Ok(Some(_)) => Ok(None),
-        Ok(None) => Ok(None),
-        Err(e) => Err(e),
-    }
-}
-
-/// Read µV value from the `voltage_` file and convert into `ElectricPotential` type.
-pub fn current<T: AsRef<Path>>(path: T) -> Result<Option<ElectricCurrent>> {
-    let path = path.as_ref();
-    debug_assert!(path.file_name().unwrap().to_string_lossy().starts_with("current_"));
-
-    match get::<f32, _>(path) {
-        Ok(Some(value_ua)) if value_ua > 1.0 => Ok(Some(microampere!(value_ua))),
         Ok(Some(_)) => Ok(None),
         Ok(None) => Ok(None),
         Err(e) => Err(e),
