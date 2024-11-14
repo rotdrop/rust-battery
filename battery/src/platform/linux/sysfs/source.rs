@@ -199,7 +199,7 @@ impl<'p> DataBuilder<'p> {
                             // Source: upower
                             if !self.charge_full().is_zero() {
                                 // µA then
-                                Some(microampere!(current_now) * *self.design_voltage()?)
+                                Some(microampere!(current_now.abs()) * self.voltage()?)
                             } else {
                                 // µW :|
                                 Some(microwatt!(current_now))
