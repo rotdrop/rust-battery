@@ -110,7 +110,7 @@ pub trait BatteryDevice: Sized + Debug {
             // unplugging the charger. Assume that the battery doesn't have time_to_empty in such
             // cases, to avoid divison by zero. See https://github.com/svartalf/rust-battery/pull/5
             State::Discharging if !energy_rate.is_zero() => {
-                let time_to_empty = self.energy() / energy_rate;
+                let time_to_empty = self.energy() / energy_rate.abs();
                 if time_to_empty.get::<day>() > 10.0 {
                     // Ten days for discharging is too much
                     None
