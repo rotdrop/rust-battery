@@ -192,39 +192,15 @@ impl<'p> DataBuilder<'p> {
         self.energy_rate.try_borrow_with(|| {
             let value = match fs::power(self.root.join("power_now"))? {
                 Some(power) => Some(power),
-                None => {
-		    let mut power =
-			["current_now", "current_avg"]
-			.iter()
-			.filter_map(|filename| match fs::get::<f32, _>(self.root.join(filename)) {
-                            Ok(Some(value)) => Some(value),
-			    _ => None,
-			});
-		    match power.next() {
-			Some(current) => {
-			    // If charge_full exists, then current_now is always reported in µA.
-			    // In the legacy case, where energy only units exist, and power_now isn't present
-			    // current_now is power in µW.
-			    // Source: upower
-			    if !self.charge_full().is_zero() {
-                                // µA then
-                                Some(microampere!(current.abs()) * self.voltage()?)
-			    } else {
-                                // µW :|
-                                Some(microwatt!(current))
-			    }
-                        }
-			None => None,
-		    }
-                }		
+		None => Some(self.current()? * self.voltage()?),
             };
 
             let value = value
                 // Sanity check if power is greater than 100W (upower)
-                .map(|power| if power.get::<watt>() > 100.0 { watt!(0.0) } else { power })
+                .map(|power| if power.get::<watt>().abs() > 100.0 { watt!(0.0) } else { power })
                 // Some batteries give out massive rate values when nearly empty (upower)
                 .map(|power| {
-                    if power.get::<microwatt>() < 10.0 {
+                    if power.get::<microwatt>().abs() < 10.0 {
                         watt!(0.0)
                     } else {
                         power
