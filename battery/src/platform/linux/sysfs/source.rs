@@ -7,7 +7,7 @@ use num_traits::identities::Zero;
 
 use super::fs;
 use crate::units::power::{microwatt, watt};
-use crate::units::{Bound, ElectricCharge, ElectricPotential, Energy, Power, Ratio, ThermodynamicTemperature};
+use crate::units::{Bound, ElectricCharge, ElectricCurrent, ElectricPotential, Energy, Power, Ratio, ThermodynamicTemperature};
 use crate::{Error, Result, State, Technology};
 
 #[derive(Debug)]
@@ -20,6 +20,7 @@ pub struct InstantData {
     pub energy_full_design: Energy,
     pub energy_rate: Power,
     pub voltage: ElectricPotential,
+    pub current: ElectricCurrent,
     pub state: State,
     pub temperature: Option<ThermodynamicTemperature>,
     pub cycle_count: Option<u32>,
@@ -65,6 +66,7 @@ impl<'p> DataBuilder<'p> {
             energy_full_design: *self.energy_full_design()?,
             energy_rate: *self.energy_rate()?,
             voltage: self.voltage()?,
+            current: self.current()?,
             state: *self.state()?,
             temperature: self.temperature()?,
             cycle_count: self.cycle_count()?,
@@ -198,16 +200,16 @@ impl<'p> DataBuilder<'p> {
                             // current_now is power in µW.
                             // Source: upower
                             if !self.charge_full().is_zero() {
-                                // µA then
+                                 // µA then
                                 Some(microampere!(current_now.abs()) * self.voltage()?)
                             } else {
-                                // µW :|
+                                 // µW :|
                                 Some(microwatt!(current_now))
                             }
                         }
                         None => None,
                     }
-                }
+                }		
             };
 
             let value = value
@@ -281,6 +283,21 @@ impl<'p> DataBuilder<'p> {
         match value.next() {
             Some(value) => Ok(value),
             None => Err(Error::not_found("Unable to calculate device voltage value")),
+        }
+    }
+
+    fn current(&self) -> Result<ElectricCurrent> {
+        let mut value =
+            ["current_now", "current_avg"]
+                .iter()
+                .filter_map(|filename| match fs::current(self.root.join(filename)) {
+                    Ok(Some(value)) => Some(value),
+                    _ => None,
+                });
+
+        match value.next() {
+            Some(value) => Ok(value),
+            None => Err(Error::not_found("Unable to calculate device current value")),
         }
     }
 

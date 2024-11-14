@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 
 use crate::platform::traits::*;
 use crate::platform::Device;
-use crate::units::{ElectricPotential, Energy, Power, Ratio, ThermodynamicTemperature, Time};
+use crate::units::{ElectricPotential, ElectricCurrent, Energy, Power, Ratio, ThermodynamicTemperature, Time};
 use crate::{State, Technology};
 
 /// Battery instant information representation.
@@ -65,6 +65,11 @@ impl Battery {
     /// Battery voltage.
     pub fn voltage(&self) -> ElectricPotential {
         self.0.voltage()
+    }
+
+    /// Battery current.
+    pub fn current(&self) -> ElectricCurrent {
+        self.0.current()
     }
 
     /// Gets battery state of health.
@@ -164,6 +169,7 @@ impl fmt::Debug for Battery {
             .field("energy_full_design", &self.energy_full_design())
             .field("energy_rate", &self.energy_rate())
             .field("voltage", &self.voltage())
+            .field("current", &self.current())
             // charge stats
             .field("time_to_full", &self.time_to_full())
             .field("time_to_empty", &self.time_to_empty())

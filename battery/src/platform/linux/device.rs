@@ -3,7 +3,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::platform::traits::*;
-use crate::units::{ElectricPotential, Energy, Power, Ratio, ThermodynamicTemperature};
+use crate::units::{ElectricPotential, ElectricCurrent, Energy, Power, Ratio, ThermodynamicTemperature};
 use crate::{Error, Result, State, Technology};
 
 use super::sysfs::{fs, DataBuilder, InstantData, Scope, Type};
@@ -98,6 +98,10 @@ impl BatteryDevice for SysFsDevice {
 
     fn voltage(&self) -> ElectricPotential {
         self.source.voltage
+    }
+
+    fn current(&self) -> ElectricCurrent {
+        self.source.current
     }
 
     fn temperature(&self) -> Option<ThermodynamicTemperature> {

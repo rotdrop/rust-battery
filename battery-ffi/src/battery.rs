@@ -7,6 +7,7 @@ use crate::state::State;
 use crate::technology::Technology;
 use crate::Battery;
 
+use battery::units::electric_current::ampere;
 use battery::units::electric_potential::volt;
 use battery::units::energy::joule;
 use battery::units::power::watt;
@@ -90,6 +91,19 @@ pub unsafe extern "C" fn battery_get_voltage(ptr: *const Battery) -> libc::c_flo
     let battery = &*ptr;
 
     battery.voltage().get::<volt>()
+}
+
+/// Returns battery current (in `A`)
+///
+/// # Panics
+///
+/// This function will panic if passed pointer is `NULL`
+#[no_mangle]
+pub unsafe extern "C" fn battery_get_current(ptr: *const Battery) -> libc::c_float {
+    assert!(!ptr.is_null());
+    let battery = &*ptr;
+
+    battery.current().get::<ampere>()
 }
 
 /// Returns battery state of health as a percentage value from `0.0` to `100.0`.

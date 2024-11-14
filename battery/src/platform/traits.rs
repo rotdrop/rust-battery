@@ -6,7 +6,7 @@ use std::rc::Rc;
 use num_traits::identities::Zero;
 use uom::si::time::{day, hour};
 
-use crate::units::{Bound, ElectricPotential, Energy, Power, Ratio, ThermodynamicTemperature, Time};
+use crate::units::{Bound, ElectricPotential, ElectricCurrent, Energy, Power, Ratio, ThermodynamicTemperature, Time};
 use crate::{Result, State, Technology};
 
 pub trait BatteryManager: Debug + Sized {
@@ -55,6 +55,8 @@ pub trait BatteryDevice: Sized + Debug {
     fn state(&self) -> State;
 
     fn voltage(&self) -> ElectricPotential;
+
+    fn current(&self) -> ElectricCurrent;
 
     fn temperature(&self) -> Option<ThermodynamicTemperature>;
 
